@@ -8,6 +8,7 @@
     "MinecraftMixin"
   ],
   "client": [
+    "CameraMixin",
     "ItemInHandMixin",
     "PlayerRendererMixin"
   ],

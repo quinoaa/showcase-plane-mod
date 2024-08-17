@@ -1,6 +1,7 @@
 package space.quinoaa.plane.entity;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -64,6 +65,8 @@ public class Plane extends Entity {
         return super.getViewXRot(pPartialTicks);
     }
 
+    private int soundDelay = 0;
+
     @Override
     public void tick() {
         super.tick();
@@ -82,6 +85,17 @@ public class Plane extends Entity {
             if(throttle < 0) throttle = 0;
             if(throttle > 2) throttle = 2;
 
+            if(throttle > 0.05){
+                soundDelay++;
+
+                int delay = (int) (20 - throttle * 10);
+
+                if(soundDelay >= delay){
+                    soundDelay = 0;
+                    level().playLocalSound(blockPosition(), SoundEvents.ENDER_DRAGON_FLAP, getSoundSource(), 4, 1, false);
+                }
+            }
+
             var turnTarget = PlaneControlsHandler.turnTarget();
 
             zRot0 = zRot;
@@ -91,10 +105,12 @@ public class Plane extends Entity {
             addDeltaMovement(getLookAngle().scale(throttle * 0.1f));
 
             var mvnt = getDeltaMovement();
-            var keepRatio = Math.exp(-mvnt.length() * .1) * .6;
-            var keep = mvnt.scale(keepRatio);
-            var directed = getLookAngle().scale(mvnt.length() * (1 - keepRatio));
-            setDeltaMovement(keep.add(directed));
+            if(!onGround()){
+                var keepRatio = Math.exp(-mvnt.length() * .1) * .6;
+                var keep = mvnt.scale(keepRatio);
+                var directed = getLookAngle().scale(mvnt.length() * (1 - keepRatio));
+                setDeltaMovement(keep.add(directed));
+            }
 
             move(MoverType.SELF, getDeltaMovement());
 
